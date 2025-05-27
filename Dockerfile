@@ -1,4 +1,4 @@
-FROM rocker/r-ver:latest
+FROM rocker/r-ver:4.4
 
 LABEL maintainer="HaglundA <HaglundA@github.com>"
 LABEL description="Docker image for GWAS ingestion pipeline with MungeSumstats"

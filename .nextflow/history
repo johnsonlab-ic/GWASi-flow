@@ -1,0 +1,4 @@
+2025-05-27 10:43:54	-	determined_bartik	-	a652c531a27953e16c4a94263a8a20f2	4ad09772-c831-4fe4-bf28-a4eb60b6345d	nextflow run main.nf
+2025-05-27 10:45:20	4.7s	pensive_engelbart	ERR	a652c531a27953e16c4a94263a8a20f2	b785a62f-8d28-4cfa-b440-a3c0dd9ecb90	nextflow run main.nf --gwas_csv test/inputs/gwas_list.csv
+2025-05-27 10:47:28	4.9s	astonishing_jepsen	ERR	a652c531a27953e16c4a94263a8a20f2	2382cb65-bad8-45bb-9893-6542823add63	nextflow run main.nf --gwas_csv test/inputs/gwas_list.csv -w /var/lib/docker/alex_tmp/NF_WORK/
+2025-05-27 10:48:31	10.5s	modest_shockley	ERR	a652c531a27953e16c4a94263a8a20f2	d2c24d99-ed60-40cf-9a5a-cc363c2c3f24	nextflow run main.nf --gwas_csv test/inputs/gwas_list.csv -w /var/lib/docker/alex_tmp/NF_WORK/
