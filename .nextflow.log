@@ -1,0 +1,89 @@
+May-29 08:12:55.508 [main] DEBUG nextflow.cli.Launcher - $> nextflow run main.nf --gwas_csv test/inputs/gwas_list.csv -w -resume
+May-29 08:12:55.615 [main] DEBUG nextflow.cli.CmdRun - N E X T F L O W  ~  version 24.10.4
+May-29 08:12:55.633 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/ah3918/.nextflow/plugins; core-plugins: nf-amazon@2.9.2,nf-azure@1.10.2,nf-cloudcache@0.4.2,nf-codecommit@0.2.2,nf-console@1.1.4,nf-google@1.15.3,nf-tower@1.9.3,nf-wave@1.7.4
+May-29 08:12:55.661 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+May-29 08:12:55.662 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+May-29 08:12:55.664 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.12.0 in 'deployment' mode
+May-29 08:12:55.676 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+May-29 08:12:55.696 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /home/ah3918/GWASi-flow/nextflow.config
+May-29 08:12:55.698 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/ah3918/GWASi-flow/nextflow.config
+May-29 08:12:55.721 [main] DEBUG n.secret.LocalSecretsProvider - Secrets store: /home/ah3918/.nextflow/secrets/store.json
+May-29 08:12:55.724 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@6999cd39] - activable => nextflow.secret.LocalSecretsProvider@6999cd39
+May-29 08:12:55.736 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+May-29 08:12:56.199 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 by global default
+May-29 08:12:56.214 [main] DEBUG nextflow.cli.CmdRun - Launching `main.nf` [infallible_goodall] DSL2 - revision: c6b9ddd466
+May-29 08:12:56.215 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+May-29 08:12:56.216 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
+May-29 08:12:56.272 [main] DEBUG nextflow.Session - Session UUID: 71e5f633-d5a9-46a4-babc-37a26b4e5d5c
+May-29 08:12:56.273 [main] DEBUG nextflow.Session - Run name: infallible_goodall
+May-29 08:12:56.273 [main] DEBUG nextflow.Session - Executor pool size: 128
+May-29 08:12:56.281 [main] DEBUG nextflow.file.FilePorter - File porter settings maxRetries=3; maxTransfers=50; pollTimeout=null
+May-29 08:12:56.286 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=384; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+May-29 08:12:56.308 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 24.10.4 build 5934
+  Created: 20-01-2025 16:47 UTC 
+  System: Linux 6.8.0-55-lowlatency
+  Runtime: Groovy 4.0.23 on OpenJDK 64-Bit Server VM 21.0.7+6-Ubuntu-0ubuntu124.04
+  Encoding: UTF-8 (UTF-8)
+  Process: 19354@landmark-t-02 [172.17.0.1]
+  CPUs: 128 - Mem: 251.3 GB (91 GB) - Swap: 8 GB (8 GB)
+May-29 08:12:56.334 [main] DEBUG nextflow.Session - Work-dir: /home/ah3918/GWASi-flow/-resume [zfs]
+May-29 08:12:56.350 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+May-29 08:12:56.358 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+May-29 08:12:56.383 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+May-29 08:12:56.393 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 129; maxThreads: 1000
+May-29 08:12:56.449 [main] DEBUG nextflow.Session - Session start
+May-29 08:12:56.858 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+May-29 08:12:56.872 [main] INFO  nextflow.Nextflow - GWASi-flow - GWAS INGESTION PIPELINE
+===================================
+GWAS CSV     : test/inputs/gwas_list.csv
+GWAS URL     : null
+Output dir   : results
+
+May-29 08:12:57.025 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+May-29 08:12:57.025 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+May-29 08:12:57.030 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
+May-29 08:12:57.037 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=128; memory=251.3 GB; capacity=128; pollInterval=100ms; dumpInterval=5m
+May-29 08:12:57.039 [main] DEBUG n.processor.TaskPollingMonitor - >>> barrier register (monitor: local)
+May-29 08:12:57.098 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+May-29 08:12:57.098 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+May-29 08:12:57.101 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: mungeGWAS, downloadGWAS
+May-29 08:12:57.102 [main] DEBUG nextflow.Session - Igniting dataflow network (3)
+May-29 08:12:57.106 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > downloadGWAS
+May-29 08:12:57.107 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > mungeGWAS
+May-29 08:12:57.107 [main] DEBUG nextflow.script.ScriptRunner - Parsed script files:
+  Script_64ccc574869437ba: /home/ah3918/GWASi-flow/main.nf
+May-29 08:12:57.108 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+May-29 08:12:57.108 [main] DEBUG nextflow.Session - Session await
+May-29 08:12:57.112 [Actor Thread 6] INFO  nextflow.Nextflow - Processing row: GWAS=Epilepsy_1, year=2018, URL=https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
+May-29 08:12:57.115 [Actor Thread 6] INFO  nextflow.Nextflow - Processing row: GWAS=Epilepsy_3, year=2019, URL=https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
+May-29 08:12:57.115 [Actor Thread 6] INFO  nextflow.Nextflow - Processing row: GWAS=Epilepsy_2, year=2020, URL=https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
+May-29 08:12:57.253 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+May-29 08:12:57.255 [Task submitter] INFO  nextflow.Session - [55/2679da] Submitted process > downloadGWAS (1)
+May-29 08:12:57.276 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+May-29 08:12:57.277 [Task submitter] INFO  nextflow.Session - [31/f3daef] Submitted process > downloadGWAS (3)
+May-29 08:12:57.282 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+May-29 08:12:57.283 [Task submitter] INFO  nextflow.Session - [59/ca4cbf] Submitted process > downloadGWAS (2)
+May-29 08:13:00.787 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 3; name: downloadGWAS (3); status: COMPLETED; exit: 0; error: -; workDir: /home/ah3918/GWASi-flow/-resume/31/f3daef6921fe09c59f873a57aff80a]
+May-29 08:13:00.789 [Task monitor] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'TaskFinalizer' minSize=10; maxSize=384; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+May-29 08:13:00.815 [TaskFinalizer-1] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'PublishDir' minSize=10; maxSize=384; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+May-29 08:13:00.848 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+May-29 08:13:00.848 [Task submitter] INFO  nextflow.Session - [f1/2fc7ab] Submitted process > mungeGWAS (1)
+May-29 08:13:01.426 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 1; name: downloadGWAS (1); status: COMPLETED; exit: 0; error: -; workDir: /home/ah3918/GWASi-flow/-resume/55/2679da42493972c8570945e2823eba]
+May-29 08:13:01.441 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+May-29 08:13:01.442 [Task submitter] INFO  nextflow.Session - [98/a0877a] Submitted process > mungeGWAS (2)
+May-29 08:13:01.566 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 2; name: downloadGWAS (2); status: COMPLETED; exit: 0; error: -; workDir: /home/ah3918/GWASi-flow/-resume/59/ca4cbfe50f417aa567a1041736a804]
+May-29 08:13:01.584 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+May-29 08:13:01.584 [Task submitter] INFO  nextflow.Session - [16/0e4e6f] Submitted process > mungeGWAS (3)
+May-29 08:13:32.656 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 5; name: mungeGWAS (2); status: COMPLETED; exit: 0; error: -; workDir: /home/ah3918/GWASi-flow/-resume/98/a0877a01bab516306cb14102e92158]
+May-29 08:13:32.694 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 6; name: mungeGWAS (3); status: COMPLETED; exit: 0; error: -; workDir: /home/ah3918/GWASi-flow/-resume/16/0e4e6f6c5f6068e2c516efedebe8d2]
+May-29 08:13:32.752 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 4; name: mungeGWAS (1); status: COMPLETED; exit: 0; error: -; workDir: /home/ah3918/GWASi-flow/-resume/f1/2fc7abef6eda27431854ad7138526b]
+May-29 08:13:32.758 [main] DEBUG nextflow.Session - Session await > all processes finished
+May-29 08:13:32.852 [Task monitor] DEBUG n.processor.TaskPollingMonitor - <<< barrier arrives (monitor: local) - terminating tasks monitor poll loop
+May-29 08:13:32.852 [main] DEBUG nextflow.Session - Session await > all barriers passed
+May-29 08:13:32.855 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'TaskFinalizer' shutdown completed (hard=false)
+May-29 08:13:32.882 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'PublishDir' shutdown completed (hard=false)
+May-29 08:13:32.889 [main] DEBUG n.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=6; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=1m 46s; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=3; peakCpus=3; peakMemory=0; ]
+May-29 08:13:32.914 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+May-29 08:13:32.937 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'FileTransfer' shutdown completed (hard=false)
+May-29 08:13:32.938 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye

@@ -8,6 +8,7 @@
 params.gwas_url = null
 params.gwas_csv = null
 params.outdir = 'results'
+params.genome_build = 'GRCh38' // Default genome build, can be parameterized
 
 log.info """\
          GWASi-flow - GWAS INGESTION PIPELINE
@@ -49,26 +50,24 @@ process mungeGWAS {
     
     input:
     tuple val(meta), path(gwas_file)
+    val genome_build // Default genome build, can be parameterized if needed
+    
+    when:
     
     output:
-    tuple val(meta), path("${meta.gwas}_processed.txt"), emit: gwas_processed
+    tuple val(meta), path("${meta.gwas}_processed*.txt"), emit: gwas_processed
     
     script:
     """
     #!/usr/bin/env Rscript
+    genome_build <- "${genome_build}"
+
+    MungeSumstats::format_sumstats("${gwas_file}",
+    save_path=paste0("${meta.gwas}_processed",genome_build,".txt"),
+    ref_genome=genome_build,
+    impute_beta=TRUE,
+    impute_se=TRUE)
     
-    # Load required libraries
-    library(MungeSumstats)
-    
-    # Process GWAS summary statistics
-    # This is a placeholder - you'll need to add your specific processing logic
-    gwas_data <- MungeSumstats::read_sumstats("${gwas_file}")
-    
-    # Add your munging operations here
-    # ...
-    
-    # Write processed data
-    write.table(gwas_data, file="${meta.gwas}_processed.txt", quote=FALSE, row.names=FALSE, sep="\\t")
     """
 }
 
@@ -78,12 +77,16 @@ workflow {
         // CSV-based workflow - read CSV file directly into a channel
         Channel
             .fromPath(params.gwas_csv)
-            .splitCsv(header: true)
-            .map { row -> [row.GWAS, row.year, row.URL] }
+            .splitCsv(header: true, strip: true)  // Added strip option to remove whitespace
+            .map { row -> 
+                // Add debug log to see what values we're getting
+                log.info "Processing row: GWAS=${row.GWAS}, year=${row.year}, URL=${row.URL}"
+                [row.GWAS?.trim(), row.year?.trim(), row.URL?.trim()]
+            }
             .set { gwas_ch }
             
         downloadGWAS(gwas_ch)
-        mungeGWAS(downloadGWAS.out.gwas_raw)
+        mungeGWAS(downloadGWAS.out.gwas_raw,params.genome_build)
     } else if (params.gwas_url) {
         // Legacy single URL workflow
         Channel
@@ -91,6 +94,6 @@ workflow {
             .set { gwas_ch }
             
         downloadGWAS(gwas_ch)
-        mungeGWAS(downloadGWAS.out.gwas_raw)
+        mungeGWAS(downloadGWAS.out.gwas_raw, params.genome_build)
     }
 }
