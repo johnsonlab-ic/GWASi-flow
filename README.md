@@ -17,49 +17,70 @@ This pipeline performs the following steps:
 
 ### Run the pipeline
 
-Using a CSV file with GWAS information:
 ```bash
 nextflow run main.nf --gwas_csv 'path/to/your/gwas_list.csv' --outdir 'results'
 ```
 
-Using a single GWAS URL (legacy mode):
-```bash
-nextflow run main.nf --gwas_url 'https://path/to/your/gwas/file' --outdir 'results'
-```
-
 ### Docker image
 
-The pipeline uses Docker containers to ensure reproducibility. The required Docker image is automatically pulled when you run the pipeline.
+The pipeline uses a Docker container with R and MungeSumstats to ensure reproducibility. The required Docker image (`ghcr.io/haglunda/gwasi-flow:latest`) is automatically pulled from GitHub Container Registry when you run the pipeline.
+
+You can also build and push the Docker image yourself using the provided script:
+
+```bash
+./personal/build_docker.sh
+```
 
 ## Parameters
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `--gwas_csv` | Path to CSV file with GWAS information (columns: GWAS, year, URL) | null |
-| `--gwas_url` | URL of a single GWAS summary statistics file to download (legacy mode) | null |
 | `--outdir` | Directory where results will be saved | `results` |
+| `--genome_build` | Genome build to use for processing (e.g., GRCh38, GRCh37) | `GRCh38` |
 
 ## Input CSV Format
 
 The input CSV file should have the following columns:
-- `GWAS`: Name/identifier of the GWAS study
-- `year`: Publication year of the study
+- `GWAS`: Name/identifier of the GWAS study (used for output file naming)
+- `year`: Publication year of the study (for metadata)
 - `URL`: URL or FTP link to download the GWAS summary statistics file
 
 Example:
 ```
 GWAS,year,URL
-Height_GIANT,2018,https://example.com/height_giant.txt.gz
-BMI_GIANT,2019,https://example.com/bmi_giant.txt.gz
-T2D_DIAGRAM,2020,ftp://example.com/t2d_diagram.txt.gz
+Epilepsy_1,2018,https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
+Epilepsy_2,2019,https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
+Epilepsy_3,2020,https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
 ```
 
 ## Output
 
 The pipeline produces:
-- `results/raw/` - Downloaded raw GWAS files
-- `results/processed/` - Processed GWAS files after running through MungeSumstats
+- `results/raw/` - Downloaded raw GWAS files (named as `{GWAS}_raw.txt`)
+- `results/processed/` - Processed GWAS files after running through MungeSumstats (named as `{GWAS}_processed{GENOME_BUILD}.txt`)
 
-## Customizing the MungeSumstats Process
+For example, with the default GRCh38 genome build:
+```
+results/
+├── processed/
+│   ├── Epilepsy_1_processedGRCh38.txt
+│   ├── Epilepsy_2_processedGRCh38.txt
+│   └── Epilepsy_3_processedGRCh38.txt
+└── raw/
+    ├── Epilepsy_1_raw.txt
+    ├── Epilepsy_2_raw.txt
+    └── Epilepsy_3_raw.txt
+```
 
-Edit the `mungeGWAS` process in `main.nf` to modify how your GWAS data is processed.
+## MungeSumstats Processing
+
+The pipeline uses the [MungeSumstats](https://github.com/neurogenomics/MungeSumstats) R package to standardize GWAS summary statistics. The current implementation:
+
+- Validates and corrects RSIDs using the specified genome build
+- Checks and corrects allele directions
+- Imputes beta values and standard errors when missing
+- Filters out problematic SNPs (non-biallelic, missing data, etc.)
+- Standardizes column names and order
+
+You can customize the MungeSumstats parameters by editing the `mungeGWAS` process in `main.nf`.
