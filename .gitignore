@@ -2,4 +2,3 @@ build_docker.sh
 results/
 .nextflow/
 personal/
-test/
