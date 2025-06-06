@@ -26,6 +26,7 @@ if (params.gwas_csv == null) {
 
 // Process 1: Download GWAS file
 process downloadGWAS {
+    label "process_low"
     publishDir "${params.outdir}/raw", mode: 'copy'
     
     input:
@@ -45,6 +46,7 @@ process downloadGWAS {
 
 // Process 2: Munge GWAS file using MungeSumstats
 process mungeGWAS {
+    label "process_high"
     publishDir "${params.outdir}/processed", mode: 'copy'
     
     
