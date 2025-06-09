@@ -18,7 +18,7 @@ This pipeline performs the following steps:
 ### Run the pipeline
 
 ```bash
-nextflow run main.nf --gwas_csv 'path/to/your/gwas_list.csv' --outdir 'results'
+nextflow run johnsonlab-ic/GWASi-flow --gwas_csv 'path/to/your/gwas_list.csv' --outdir 'results'
 ```
 
 ### Docker image
