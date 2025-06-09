@@ -40,7 +40,21 @@ process downloadGWAS {
     
     script:
     """
-    wget -O "${gwas}_raw.txt" ${url}
+    # Download the file with original extension
+    wget -O downloaded_file "${url}"
+    
+    # Check if the file is gzipped
+    if file downloaded_file | grep -q gzip; then
+        gunzip -c downloaded_file > "${gwas}_raw.txt"
+    elif file downloaded_file | grep -q zip; then
+        # Handle zip files
+        unzip -p downloaded_file > "${gwas}_raw.txt"
+    elif file downloaded_file | grep -q "bzip2"; then
+        bunzip2 -c downloaded_file > "${gwas}_raw.txt"
+    else
+        # File is not compressed, just rename it
+        mv downloaded_file "${gwas}_raw.txt"
+    fi
     """
 }
 
