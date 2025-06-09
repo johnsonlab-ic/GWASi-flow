@@ -44,15 +44,22 @@ You can also build and push the Docker image yourself using the provided script:
 The input CSV file should have the following columns:
 - `GWAS`: Name/identifier of the GWAS study (used for output file naming)
 - `year`: Publication year of the study (for metadata)
-- `URL`: URL or FTP link to download the GWAS summary statistics file
+- `URL`: URL or local file path to the GWAS summary statistics file
 
-Example:
+For URL format:
 ```
 GWAS,year,URL
 Epilepsy_1,2018,https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
-Epilepsy_2,2019,https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
-Epilepsy_3,2020,https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
 ```
+
+For local file paths:
+```
+GWAS,year,URL
+Epilepsy_2,2019,/path/to/local/gwas_file.txt.gz
+Epilepsy_3,2020,./relative/path/to/gwas_file.txt
+```
+
+You can mix both URL and local file paths in the same CSV file.
 
 ## Output
 

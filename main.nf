@@ -24,13 +24,13 @@ if (params.gwas_csv == null) {
     error "Please provide a CSV file with GWAS information using --gwas_csv"
 }
 
-// Process 1: Download GWAS file
+// Process 1: Download GWAS file or use local file
 process downloadGWAS {
     label "process_low"
     publishDir "${params.outdir}/raw", mode: 'copy'
     
     input:
-    tuple val(gwas), val(year), val(url)
+    tuple val(gwas), val(year), val(source)
     
     output:
     tuple val(meta), path("${gwas}_raw.txt"), emit: gwas_raw
@@ -39,23 +39,46 @@ process downloadGWAS {
     meta = [gwas: gwas, year: year]
     
     script:
-    """
-    # Download the file with original extension
-    wget -O downloaded_file "${url}"
-    
-    # Check if the file is gzipped
-    if file downloaded_file | grep -q gzip; then
-        gunzip -c downloaded_file > "${gwas}_raw.txt"
-    elif file downloaded_file | grep -q zip; then
-        # Handle zip files
-        unzip -p downloaded_file > "${gwas}_raw.txt"
-    elif file downloaded_file | grep -q "bzip2"; then
-        bunzip2 -c downloaded_file > "${gwas}_raw.txt"
-    else
-        # File is not compressed, just rename it
-        mv downloaded_file "${gwas}_raw.txt"
-    fi
-    """
+    // Check if source is a local file (starts with / or ./ or ../)
+    if (source ==~ /^\\/.*/ || source ==~ /^\\.\\/.*/ || source ==~ /^\\.\\.\\/.*/){
+        """
+        # Source is a local file path
+        echo "Using local file: ${source}"
+        
+        # Check if the file is gzipped
+        if file "${source}" | grep -q gzip; then
+            gunzip -c "${source}" > "${gwas}_raw.txt"
+        elif file "${source}" | grep -q zip; then
+            # Handle zip files
+            unzip -p "${source}" > "${gwas}_raw.txt"
+        elif file "${source}" | grep -q "bzip2"; then
+            bunzip2 -c "${source}" > "${gwas}_raw.txt"
+        else
+            # File is not compressed, just copy it
+            cp "${source}" "${gwas}_raw.txt"
+        fi
+        """
+    }
+    else {
+        """
+        # Source is a URL, download it
+        echo "Downloading from URL: ${source}"
+        wget -O downloaded_file "${source}"
+        
+        # Check if the file is gzipped
+        if file downloaded_file | grep -q gzip; then
+            gunzip -c downloaded_file > "${gwas}_raw.txt"
+        elif file downloaded_file | grep -q zip; then
+            # Handle zip files
+            unzip -p downloaded_file > "${gwas}_raw.txt"
+        elif file downloaded_file | grep -q "bzip2"; then
+            bunzip2 -c downloaded_file > "${gwas}_raw.txt"
+        else
+            # File is not compressed, just rename it
+            mv downloaded_file "${gwas}_raw.txt"
+        fi
+        """
+    }
 }
 
 // Process 2: Munge GWAS file using MungeSumstats
