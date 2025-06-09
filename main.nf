@@ -27,6 +27,7 @@ if (params.gwas_csv == null) {
 // Process 1: Download GWAS file from URL
 process downloadGWAS {
     label "process_low"
+    tag "$gwas" 
     publishDir "${params.outdir}/raw", mode: 'copy'
     
     input:
@@ -74,6 +75,7 @@ process downloadGWAS {
 // Process 2: Stage local GWAS file (runs locally without container)
 process stageGWAS {
     label "process_single"
+    tag "$gwas"  // Tag process with GWAS name for easier tracking
     publishDir "${params.outdir}/raw", mode: 'copy'
     executor 'local'  // Force execution on local machine
     container null    // Disable container for this process
@@ -157,10 +159,10 @@ workflow {
         .map { row ->
             def gwas = row.GWAS?.trim()
             def year = row.year?.trim()
-            def source = row.URL?.trim()
+            def source = row.path?.trim() ?: row.URL?.trim() // Support both 'path' and 'URL' for backward compatibility
             
             // Log what we're processing
-            log.info "Processing row: GWAS=${gwas}, year=${year}, source=${source}"
+            log.info "Processing row: GWAS=${gwas}, year=${year}, path=${source}"
             
             // Return a tuple with GWAS name, year, source, and whether it's a local file
             [gwas, year, source, (source ==~ /^\\/.*/ || source ==~ /^\\.\\/.*/ || source ==~ /^\\.\\.\\/.*/)]

@@ -35,7 +35,7 @@ You can also build and push the Docker image yourself using the provided script:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `--gwas_csv` | Path to CSV file with GWAS information (columns: GWAS, year, URL) | null |
+| `--gwas_csv` | Path to CSV file with GWAS information (columns: GWAS, year, path) | null |
 | `--outdir` | Directory where results will be saved | `results` |
 | `--genome_build` | Genome build to use for processing (e.g., GRCh38, GRCh37) | `GRCh38` |
 
@@ -44,7 +44,7 @@ You can also build and push the Docker image yourself using the provided script:
 The input CSV file should have the following columns:
 - `GWAS`: Name/identifier of the GWAS study (used for output file naming)
 - `year`: Publication year of the study (for metadata)
-- `URL`: URL or local file path to the GWAS summary statistics file
+- `path`: Path to the GWAS summary statistics file (can be URL or local file path)
 
 ### Data Source Types
 
@@ -52,13 +52,13 @@ The pipeline automatically distinguishes between URLs and local file paths in th
 
 **For URLs** (processed with `downloadGWAS`):
 ```
-GWAS,year,URL
+GWAS,year,path
 Epilepsy_1,2018,https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
 ```
 
 **For local file paths** (processed with `stageGWAS`):
 ```
-GWAS,year,URL
+GWAS,year,path
 Epilepsy_2,2019,/path/to/local/gwas_file.txt.gz
 Epilepsy_3,2020,./relative/path/to/gwas_file.txt
 ```
