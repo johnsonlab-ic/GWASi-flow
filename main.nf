@@ -44,27 +44,30 @@ process downloadGWAS {
     echo "Downloading from URL: ${url}"
     wget -O downloaded_file "${url}"
     
-    # More robust file type detection and decompression
-    FILE_TYPE=$(file -b downloaded_file)
-    echo "File type detected: $FILE_TYPE"
-    
-    if [[ "$FILE_TYPE" == *"gzip"* || "$url" == *.gz || "$url" == *.gzip ]]; then
-        echo "Detected gzip file, decompressing..."
-        gzip -cd downloaded_file > "${gwas}_raw.txt"
-    elif [[ "$FILE_TYPE" == *"Zip"* || "$FILE_TYPE" == *"zip"* || "$url" == *.zip ]]; then
-        echo "Detected zip file, extracting..."
+    # Determine file type and decompress if needed
+    if file downloaded_file | grep -q gzip; then
+        echo "Decompressing gzip file"
+        gzip -dc downloaded_file > "${gwas}_raw.txt"
+    elif file downloaded_file | grep -q zip; then
+        echo "Extracting zip file"
         unzip -p downloaded_file > "${gwas}_raw.txt"
-    elif [[ "$FILE_TYPE" == *"bzip2"* || "$url" == *.bz2 || "$url" == *.bzip2 ]]; then
-        echo "Detected bzip2 file, decompressing..."
-        bzip2 -cd downloaded_file > "${gwas}_raw.txt"
+    elif file downloaded_file | grep -q bzip2; then
+        echo "Decompressing bzip2 file"
+        bzip2 -dc downloaded_file > "${gwas}_raw.txt"
+    elif [[ "${url}" == *.gz ]]; then
+        echo "URL has .gz extension, forcing gzip decompression"
+        gzip -dc downloaded_file > "${gwas}_raw.txt" || cp downloaded_file "${gwas}_raw.txt"
     else
-        echo "Assuming uncompressed file, copying directly..."
+        echo "Using file as-is"
         cp downloaded_file "${gwas}_raw.txt"
     fi
     
-    # Verify the file was correctly decompressed
-    echo "Checking output file format:"
-    file "${gwas}_raw.txt"
+    # Verify output file exists
+    if [ -s "${gwas}_raw.txt" ]; then
+        echo "Successfully created output file"
+    else
+        echo "Warning: Output file may be empty"
+    fi
     """
 }
 
@@ -90,26 +93,29 @@ process stageGWAS {
     echo "Staging local file: ${local_file}"
     
     # More robust file type detection and decompression
-    FILE_TYPE=$(file -b "${local_file}")
-    echo "File type detected: $FILE_TYPE"
-    
-    if [[ "$FILE_TYPE" == *"gzip"* || "${local_file}" == *.gz || "${local_file}" == *.gzip ]]; then
+    if file "${local_file}" | grep -q gzip; then
         echo "Detected gzip file, decompressing..."
         gzip -cd "${local_file}" > "${gwas}_raw.txt"
-    elif [[ "$FILE_TYPE" == *"Zip"* || "$FILE_TYPE" == *"zip"* || "${local_file}" == *.zip ]]; then
+    elif file "${local_file}" | grep -q zip; then
         echo "Detected zip file, extracting..."
         unzip -p "${local_file}" > "${gwas}_raw.txt"
-    elif [[ "$FILE_TYPE" == *"bzip2"* || "${local_file}" == *.bz2 || "${local_file}" == *.bzip2 ]]; then
+    elif file "${local_file}" | grep -q bzip2; then
         echo "Detected bzip2 file, decompressing..."
         bzip2 -cd "${local_file}" > "${gwas}_raw.txt"
+    elif [[ "${local_file}" == *.gz || "${local_file}" == *.gzip ]]; then
+        echo "Filename has .gz extension, forcing gzip decompression"
+        gzip -cd "${local_file}" > "${gwas}_raw.txt" || cp "${local_file}" "${gwas}_raw.txt"
     else
         echo "Assuming uncompressed file, copying directly..."
         cp "${local_file}" "${gwas}_raw.txt"
     fi
     
-    # Verify the file was correctly decompressed
-    echo "Checking output file format:"
-    file "${gwas}_raw.txt"
+    # Verify output file exists
+    if [ -s "${gwas}_raw.txt" ]; then
+        echo "Successfully created output file"
+    else
+        echo "Warning: Output file may be empty"
+    fi
     """
 }
 
