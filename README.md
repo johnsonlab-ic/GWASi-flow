@@ -25,12 +25,6 @@ nextflow run johnsonlab-ic/GWASi-flow --gwas_csv 'path/to/your/gwas_list.csv' --
 
 The pipeline uses a Docker container with R and MungeSumstats to ensure reproducibility. The required Docker image (`ghcr.io/haglunda/gwasi-flow:latest`) is automatically pulled from GitHub Container Registry when you run the pipeline.
 
-You can also build and push the Docker image yourself using the provided script:
-
-```bash
-./personal/build_docker.sh
-```
-
 ## Parameters
 
 | Parameter | Description | Default |
@@ -65,12 +59,6 @@ Epilepsy_3,2020,./relative/path/to/gwas_file.txt
 
 You can mix both URL and local file paths in the same CSV file. Local files are detected if the path starts with `/`, `./`, or `../`.
 
-### Local File Handling
-
-When using local files:
-- Files are processed locally without using containers
-- Nextflow correctly stages these files regardless of where they are located
-- All file types (plain text, gzipped, zipped, bzipped) are handled correctly
 
 ## Output
 
@@ -93,7 +81,7 @@ results/
 
 ## MungeSumstats Processing
 
-The pipeline uses the [MungeSumstats](https://github.com/neurogenomics/MungeSumstats) R package to standardize GWAS summary statistics. The current implementation:
+The pipeline uses the [MungeSumstats](https://github.com/neurogenomics/MungeSumstats) R package by [Murphy et al.](https://academic.oup.com/bioinformatics/article/37/23/4593/6380562) to standardize GWAS summary statistics. The current implementation:
 
 - Validates and corrects RSIDs using the specified genome build
 - Checks and corrects allele directions
