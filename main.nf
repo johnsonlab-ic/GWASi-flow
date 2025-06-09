@@ -186,6 +186,7 @@ process mungeGWAS {
             cat("Converting 'SNP_ID' to 'SNP'\\n")
             setnames(sumstatsData, "SNP_ID", "SNP")
         }
+        
 
         
         # Write the modified data
@@ -201,7 +202,6 @@ process mungeGWAS {
     MungeSumstats::format_sumstats(
         inputFile,
         save_path = outputFile,
-        convert_ref_genome = genome_build,
         impute_beta = TRUE,
         impute_se = TRUE,
         ignore_multi_trait=TRUE
