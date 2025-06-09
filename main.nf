@@ -24,13 +24,13 @@ if (params.gwas_csv == null) {
     error "Please provide a CSV file with GWAS information using --gwas_csv"
 }
 
-// Process 1: Download GWAS file or use local file
+// Process 1: Download GWAS file from URL
 process downloadGWAS {
     label "process_low"
     publishDir "${params.outdir}/raw", mode: 'copy'
     
     input:
-    tuple val(gwas), val(year), val(source)
+    tuple val(gwas), val(year), val(url)
     
     output:
     tuple val(meta), path("${gwas}_raw.txt"), emit: gwas_raw
@@ -39,46 +39,60 @@ process downloadGWAS {
     meta = [gwas: gwas, year: year]
     
     script:
-    // Check if source is a local file (starts with / or ./ or ../)
-    if (source ==~ /^\\/.*/ || source ==~ /^\\.\\/.*/ || source ==~ /^\\.\\.\\/.*/){
-        """
-        # Source is a local file path
-        echo "Using local file: ${source}"
-        
-        # Check if the file is gzipped
-        if file "${source}" | grep -q gzip; then
-            gunzip -c "${source}" > "${gwas}_raw.txt"
-        elif file "${source}" | grep -q zip; then
-            # Handle zip files
-            unzip -p "${source}" > "${gwas}_raw.txt"
-        elif file "${source}" | grep -q "bzip2"; then
-            bunzip2 -c "${source}" > "${gwas}_raw.txt"
-        else
-            # File is not compressed, just copy it
-            cp "${source}" "${gwas}_raw.txt"
-        fi
-        """
-    }
-    else {
-        """
-        # Source is a URL, download it
-        echo "Downloading from URL: ${source}"
-        wget -O downloaded_file "${source}"
-        
-        # Check if the file is gzipped
-        if file downloaded_file | grep -q gzip; then
-            gunzip -c downloaded_file > "${gwas}_raw.txt"
-        elif file downloaded_file | grep -q zip; then
-            # Handle zip files
-            unzip -p downloaded_file > "${gwas}_raw.txt"
-        elif file downloaded_file | grep -q "bzip2"; then
-            bunzip2 -c downloaded_file > "${gwas}_raw.txt"
-        else
-            # File is not compressed, just rename it
-            mv downloaded_file "${gwas}_raw.txt"
-        fi
-        """
-    }
+    """
+    # Download the file from URL
+    echo "Downloading from URL: ${url}"
+    wget -O downloaded_file "${url}"
+    
+    # Check if the file is gzipped
+    if file downloaded_file | grep -q gzip; then
+        gunzip -c downloaded_file > "${gwas}_raw.txt"
+    elif file downloaded_file | grep -q zip; then
+        # Handle zip files
+        unzip -p downloaded_file > "${gwas}_raw.txt"
+    elif file downloaded_file | grep -q "bzip2"; then
+        bunzip2 -c downloaded_file > "${gwas}_raw.txt"
+    else
+        # File is not compressed, just rename it
+        mv downloaded_file "${gwas}_raw.txt"
+    fi
+    """
+}
+
+// Process 2: Stage local GWAS file (runs locally without container)
+process stageGWAS {
+    label "process_single"
+    publishDir "${params.outdir}/raw", mode: 'copy'
+    executor 'local'  // Force execution on local machine
+    container null    // Disable container for this process
+    
+    input:
+    tuple val(gwas), val(year), path(local_file)  // Using path type for proper file staging
+    
+    output:
+    tuple val(meta), path("${gwas}_raw.txt"), emit: gwas_raw
+    
+    exec:
+    meta = [gwas: gwas, year: year]
+    
+    script:
+    """
+    # Process local file
+    echo "Staging local file: ${local_file}"
+    
+    # Check if the file is gzipped
+    if file "${local_file}" | grep -q gzip; then
+        gunzip -c "${local_file}" > "${gwas}_raw.txt"
+    elif file "${local_file}" | grep -q zip; then
+        # Handle zip files
+        unzip -p "${local_file}" > "${gwas}_raw.txt"
+    elif file "${local_file}" | grep -q "bzip2"; then
+        bunzip2 -c "${local_file}" > "${gwas}_raw.txt"
+    else
+        # File is not compressed, just copy it
+        cp "${local_file}" "${gwas}_raw.txt"
+    fi
+    """
 }
 
 // Process 2: Munge GWAS file using MungeSumstats
@@ -112,17 +126,40 @@ process mungeGWAS {
 
 // Workflow definition
 workflow {
-    // CSV-based workflow - read CSV file directly into a channel
+    // Read CSV file and split into two channels: one for URLs and one for local files
     Channel
         .fromPath(params.gwas_csv)
-        .splitCsv(header: true, strip: true)  // Added strip option to remove whitespace
-        .map { row -> 
-            // Add debug log to see what values we're getting
-            log.info "Processing row: GWAS=${row.GWAS}, year=${row.year}, URL=${row.URL}"
-            [row.GWAS?.trim(), row.year?.trim(), row.URL?.trim()]
+        .splitCsv(header: true, strip: true)  // Strip whitespace
+        .map { row ->
+            def gwas = row.GWAS?.trim()
+            def year = row.year?.trim()
+            def source = row.URL?.trim()
+            
+            // Log what we're processing
+            log.info "Processing row: GWAS=${gwas}, year=${year}, source=${source}"
+            
+            // Return a tuple with GWAS name, year, source, and whether it's a local file
+            [gwas, year, source, (source ==~ /^\\/.*/ || source ==~ /^\\.\\/.*/ || source ==~ /^\\.\\.\\/.*/)]
         }
-        .set { gwas_ch }
-        
-    downloadGWAS(gwas_ch)
-    mungeGWAS(downloadGWAS.out.gwas_raw, params.genome_build)
+        .branch {
+            local: it[3] == true    // Local file path
+            remote: it[3] == false  // URL to download
+        }
+        .set { input_ch }
+    
+    // Create channels for download and stage processes
+    download_ch = input_ch.remote.map { it[0..2] }  // Just keep gwas, year, url
+    stage_ch = input_ch.local.map { it[0..2] }      // Just keep gwas, year, path
+    
+    // Process URLs through downloadGWAS
+    downloadGWAS(download_ch)
+    
+    // Process local files through stageGWAS
+    stageGWAS(stage_ch)
+    
+    // Merge the outputs from both processes for mungeGWAS
+    gwas_files_ch = downloadGWAS.out.gwas_raw.mix(stageGWAS.out.gwas_raw)
+    
+    // Process all files with mungeGWAS
+    mungeGWAS(gwas_files_ch, params.genome_build)
 }

@@ -46,20 +46,31 @@ The input CSV file should have the following columns:
 - `year`: Publication year of the study (for metadata)
 - `URL`: URL or local file path to the GWAS summary statistics file
 
-For URL format:
+### Data Source Types
+
+The pipeline automatically distinguishes between URLs and local file paths in the CSV:
+
+**For URLs** (processed with `downloadGWAS`):
 ```
 GWAS,year,URL
 Epilepsy_1,2018,https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90271001-GCST90272000/GCST90271608/GCST90271608.tsv.gz
 ```
 
-For local file paths:
+**For local file paths** (processed with `stageGWAS`):
 ```
 GWAS,year,URL
 Epilepsy_2,2019,/path/to/local/gwas_file.txt.gz
 Epilepsy_3,2020,./relative/path/to/gwas_file.txt
 ```
 
-You can mix both URL and local file paths in the same CSV file.
+You can mix both URL and local file paths in the same CSV file. Local files are detected if the path starts with `/`, `./`, or `../`.
+
+### Local File Handling
+
+When using local files:
+- Files are processed locally without using containers
+- Nextflow correctly stages these files regardless of where they are located
+- All file types (plain text, gzipped, zipped, bzipped) are handled correctly
 
 ## Output
 
