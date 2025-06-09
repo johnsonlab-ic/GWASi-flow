@@ -181,6 +181,12 @@ process mungeGWAS {
             cat("Converting 'base_pair_location' to 'POS'\\n")
             setnames(sumstatsData, "base_pair_location", "POS")
         }
+
+        if ("SNP_ID" %in% columnNames) {
+            cat("Converting 'SNP_ID' to 'SNP'\\n")
+            setnames(sumstatsData, "SNP_ID", "SNP")
+        }
+
         
         # Write the modified data
         fwrite(sumstatsData, tempFile, sep = "\\t")

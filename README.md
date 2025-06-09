@@ -79,6 +79,8 @@ The pipeline automatically detects and handles some common non-standard column n
 - `chromosome` → `CHR`
 - `base_pair_position` → `POS`
 - `base_pair_location` → `POS`
+- `SNP_ID` → `SNP`
+
 
 
 This preprocessing step ensures compatibility with MungeSumstats even when source data uses different column naming conventions.
