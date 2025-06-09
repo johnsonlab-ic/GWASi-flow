@@ -77,7 +77,9 @@ The pipeline uses the [MungeSumstats](https://github.com/neurogenomics/MungeSums
 The pipeline automatically detects and handles some common non-standard column names that can cause problems with MungeSumstats:
 
 - `chromosome` → `CHR`
-- `base_pair_position` → `BP`
+- `base_pair_position` → `POS`
+- `base_pair_location` → `POS`
+
 
 This preprocessing step ensures compatibility with MungeSumstats even when source data uses different column naming conventions.
 

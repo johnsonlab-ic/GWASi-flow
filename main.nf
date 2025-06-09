@@ -158,7 +158,7 @@ process mungeGWAS {
     cat("Original column names:", paste(columnNames, collapse = ", "), "\n")
     
     # Check for problematic column names
-    needsConversion <- any(columnNames %in% c("chromosome", "base_pair_position"))
+    needsConversion <- any(columnNames %in% c("chromosome", "base_pair_position", "base_pair_location"))
     
     if (needsConversion) {
         cat("Found non-standard column names. Converting to MungeSumstats format...\n")
@@ -173,8 +173,13 @@ process mungeGWAS {
         }
         
         if ("base_pair_position" %in% columnNames) {
-            cat("Converting 'base_pair_position' to 'BP'\\n")
-            setnames(sumstatsData, "base_pair_position", "BP")
+            cat("Converting 'base_pair_position' to 'POS'\\n")
+            setnames(sumstatsData, "base_pair_position", "POS")
+        }
+        
+        if ("base_pair_location" %in% columnNames) {
+            cat("Converting 'base_pair_location' to 'POS'\\n")
+            setnames(sumstatsData, "base_pair_location", "POS")
         }
         
         # Write the modified data
@@ -192,7 +197,8 @@ process mungeGWAS {
         save_path = outputFile,
         convert_ref_genome = genome_build,
         impute_beta = TRUE,
-        impute_se = TRUE
+        impute_se = TRUE,
+        ignore_multi_trait=TRUE
     )
     
     # Clean up temp file if it was created
