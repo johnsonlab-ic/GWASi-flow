@@ -20,6 +20,7 @@ This pipeline performs the following steps:
 ```bash
 nextflow run johnsonlab-ic/GWASi-flow --gwas_csv 'path/to/your/gwas_list.csv' --outdir 'results'
 ```
+The pipeline is run locally but also includes the `-profile imperial` for submission of jobs to PBS. You can always provide your local `.config` file to specify execution requirements.
 
 ### Docker image
 
