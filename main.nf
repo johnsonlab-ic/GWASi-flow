@@ -173,13 +173,13 @@ process mungeGWAS {
         }
         
         if ("base_pair_position" %in% columnNames) {
-            cat("Converting 'base_pair_position' to 'POS'\\n")
-            setnames(sumstatsData, "base_pair_position", "POS")
+            cat("Converting 'base_pair_position' to 'BP'\\n")
+            setnames(sumstatsData, "base_pair_position", "BP")
         }
         
         if ("base_pair_location" %in% columnNames) {
             cat("Converting 'base_pair_location' to 'POS'\\n")
-            setnames(sumstatsData, "base_pair_location", "POS")
+            setnames(sumstatsData, "base_pair_location", "BP")
         }
 
         if ("SNP_ID" %in% columnNames) {
