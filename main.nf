@@ -131,22 +131,74 @@ process mungeGWAS {
     tuple val(meta), path(gwas_file)
     val genome_build // Default genome build, can be parameterized if needed
     
-    when:
-    
     output:
     tuple val(meta), path("${meta.gwas}_processed*.txt"), emit: gwas_processed
     
     script:
     """
     #!/usr/bin/env Rscript
-    genome_build <- "${genome_build}"
-
-    MungeSumstats::format_sumstats("${gwas_file}",
-    save_path=paste0("${meta.gwas}_processed",genome_build,".txt"),
-    convert_ref_genome=genome_build,
-    impute_beta=TRUE,
-    impute_se=TRUE)
     
+    # Load required libraries
+    library(data.table)
+    
+    # Set variables
+    genome_build <- "${genome_build}"
+    inputFile <- "${gwas_file}"
+    tempFile <- "temp_${meta.gwas}_normalized.txt"
+    outputFile <- paste0("${meta.gwas}_processed", genome_build, ".txt")
+    
+    # Check if the file has headers to convert
+    cat("Checking file headers for standardization...\n")
+    
+    # Read first few lines to check headers (efficient for large files)
+    fileHeader <- fread(inputFile, nrows = 1)
+    columnNames <- names(fileHeader)
+    
+    # Print original column names
+    cat("Original column names:", paste(columnNames, collapse = ", "), "\n")
+    
+    # Check for problematic column names
+    needsConversion <- any(columnNames %in% c("chromosome", "base_pair_position"))
+    
+    if (needsConversion) {
+        cat("Found non-standard column names. Converting to MungeSumstats format...\n")
+        
+        # Read the data, potentially large so use fread
+        sumstatsData <- fread(inputFile)
+        
+        # Rename columns
+        if ("chromosome" %in% columnNames) {
+            cat("Converting 'chromosome' to 'CHR'\\n")
+            setnames(sumstatsData, "chromosome", "CHR")
+        }
+        
+        if ("base_pair_position" %in% columnNames) {
+            cat("Converting 'base_pair_position' to 'BP'\\n")
+            setnames(sumstatsData, "base_pair_position", "BP")
+        }
+        
+        # Write the modified data
+        fwrite(sumstatsData, tempFile, sep = "\\t")
+        cat("Finished converting column names. Using preprocessed file for MungeSumstats.\n")
+        
+        # Use the temp file for MungeSumstats
+        inputFile <- tempFile
+    }
+    
+    # Process with MungeSumstats
+    cat("Processing with MungeSumstats...\n")
+    MungeSumstats::format_sumstats(
+        inputFile,
+        save_path = outputFile,
+        convert_ref_genome = genome_build,
+        impute_beta = TRUE,
+        impute_se = TRUE
+    )
+    
+    # Clean up temp file if it was created
+    if (needsConversion && file.exists(tempFile)) {
+        file.remove(tempFile)
+    }
     """
 }
 

@@ -72,4 +72,13 @@ The pipeline uses the [MungeSumstats](https://github.com/neurogenomics/MungeSums
 - Filters out problematic SNPs (non-biallelic, missing data, etc.)
 - Standardizes column names and order
 
-You can customize the MungeSumstats parameters by editing the `mungeGWAS` process in `main.nf`.
+### Column Name Standardization
+
+The pipeline automatically detects and handles some common non-standard column names that can cause problems with MungeSumstats:
+
+- `chromosome` → `CHR`
+- `base_pair_position` → `BP`
+
+This preprocessing step ensures compatibility with MungeSumstats even when source data uses different column naming conventions.
+
+You can customize the MungeSumstats parameters and add more column name conversions by editing the `mungeGWAS` process in `main.nf`.
