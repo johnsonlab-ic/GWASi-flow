@@ -48,6 +48,7 @@ See `test/inputs/gwas_list.csv` for structure.
 The pipeline produces:
 - `results/raw/` - Downloaded raw GWAS files (named as `{GWAS}_raw.txt`)
 - `results/processed/` - Processed GWAS files after running through MungeSumstats (named as `{GWAS}_processed{GENOME_BUILD}.txt`)
+- `results/reports/` - Report files containing genome build detection information and processing logs
 
 For example, with the default GRCh38 genome build:
 ```
@@ -72,17 +73,19 @@ The pipeline uses the [MungeSumstats](https://github.com/neurogenomics/MungeSums
 - Filters out problematic SNPs (non-biallelic, missing data, etc.)
 - Standardizes column names and order
 
-### Column Name Standardization
+### CHR:POS to RSID conversion
 
-The pipeline automatically detects and handles some common non-standard column names that can cause problems with MungeSumstats, specifically the convert_ref_genome function:
+The pipeline is designed for minimal user input, including not having to know the genome build. MungeSumstats conveniently provides a `convert_ref_genome` function, which unfortunately expects SNPs to be in "rsid" format. 
 
-- `chromosome` → `CHR`
-- `base_pair_position` → `BP`
-- `base_pair_location` → `BP`
-- `SNP_ID` → `SNP`
+The pipeline includes an enhanced `chrpos_to_rsid` function that:
+
+1. **Automatically detects genome build** by trying both hg19/GRCh37 and hg38/GRCh38 and selecting the one that gives the highest mapping percentage
+2. **Works with both data frames and character vectors** for better integration with MungeSumstats
+3. **Generates detailed reports** about the build detection process and mapping success rates
+4. **Handles missing SNP columns** by creating them from CHR and BP columns when available
+5. **Preserves original identifiers** when no rsID mapping is found
+
+This functionality enables the pipeline to work with a wider range of GWAS summary statistics formats without requiring manual specification of the genome build.
 
 
-
-This preprocessing step ensures compatibility with MungeSumstats even when source data uses different column naming conventions.
-
-You can customize the MungeSumstats parameters and add more column name conversions by editing the `mungeGWAS` process in `main.nf`.
+You can further customize the MungeSumstats parameters and add more column name conversions by editing the `mungeGWAS` process in `main.nf`.
