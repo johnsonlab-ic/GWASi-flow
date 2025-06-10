@@ -187,6 +187,16 @@ process mungeGWAS {
             setnames(sumstatsData, "SNP_ID", "SNP")
         }
         
+        if ("other_allele" %in% columnNames) {
+            cat("Converting 'other_allele' to 'REF'\\n")
+            setnames(sumstatsData, "other_allele", "REF")
+        }
+
+        if ("effect_allele" %in% columnNames) {
+            cat("Converting 'effect_allele' to 'ALT'\\n")
+            setnames(sumstatsData, "effect_allele", "ALT")
+        }
+
 
         
         # Write the modified data
