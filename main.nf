@@ -215,6 +215,7 @@ process mungeGWAS {
         impute_beta = TRUE,
         impute_se = TRUE,
         ignore_multi_trait=TRUE,
+        ref_genome = genome_build,
         convert_ref_genome=genome_build
     )
     
