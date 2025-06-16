@@ -214,7 +214,7 @@ process mungeGWAS {
         save_path = outputFile,
         impute_beta = TRUE,
         impute_se = TRUE,
-        ignore_multi_trait=TRUE,
+        indels = FALSE,
         ref_genome = genome_build,
         convert_ref_genome=genome_build
     )
