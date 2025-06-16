@@ -216,6 +216,7 @@ process mungeGWAS {
         impute_se = TRUE,
         indels = FALSE,
         bi_allelic_filter=FALSE,
+        flip_frq_as_biallelic=TRUE,
         ref_genome = genome_build,
         convert_ref_genome=genome_build
     )
