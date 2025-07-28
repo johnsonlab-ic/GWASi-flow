@@ -160,8 +160,6 @@ process mungeGWAS {
     MungeSumstats::format_sumstats(
         inputFile,
         save_path = outputFile,
-        impute_beta = TRUE,
-        impute_se = TRUE,
         ref_genome = genome_build
     )
 
@@ -172,7 +170,6 @@ process mungeGWAS {
             save_path = outputFile,
             impute_beta = TRUE,
             impute_se = TRUE,
-    
             ref_genome = genome_build,
             convert_n_int = FALSE,
             convert_ref_genome = "GRCh38"
