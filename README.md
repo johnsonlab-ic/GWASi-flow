@@ -30,9 +30,8 @@ The pipeline uses a Docker container with R and MungeSumstats to ensure reproduc
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `--gwas_csv` | Path to CSV file with GWAS information (columns: GWAS, year, path) | null |
+| `--gwas_csv` | Path to CSV file with GWAS information (columns: GWAS, year, path, genome_build) | null |
 | `--outdir` | Directory where results will be saved | `results` |
-| `--genome_build` | Genome build to use for processing (e.g., GRCh38, GRCh37) | `GRCh38` |
 
 ## Input CSV Format
 
@@ -40,6 +39,7 @@ The input CSV file should have the following columns:
 - `GWAS`: Name/identifier of the GWAS study (used for output file naming)
 - `year`: Publication year of the study (for metadata)
 - `path`: Path to the GWAS summary statistics file (can be URL or local file path)
+- `genome_build`: Genome build of the GWAS data (must be either 'GRCh38' or 'GRCh37')
 
 See `test/inputs/gwas_list.csv` for structure.
 
@@ -49,12 +49,12 @@ The pipeline produces:
 - `results/raw/` - Downloaded raw GWAS files (named as `{GWAS}_raw.txt`)
 - `results/processed/` - Processed GWAS files after running through MungeSumstats (named as `{GWAS}_processed{GENOME_BUILD}.txt`)
 
-For example, with the default GRCh38 genome build:
+For example, with GRCh38 and GRCh37 genome builds specified in the CSV:
 ```
 results/
 ├── processed/
 │   ├── Epilepsy_1_processedGRCh38.txt
-│   ├── Epilepsy_2_processedGRCh38.txt
+│   ├── Epilepsy_2_processedGRCh37.txt
 │   └── Epilepsy_3_processedGRCh38.txt
 └── raw/
     ├── Epilepsy_1_raw.txt

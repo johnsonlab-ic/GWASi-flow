@@ -8,13 +8,11 @@
 params.gwas_url = null
 params.gwas_csv = null
 params.outdir = 'results'
-params.genome_build = 'GRCh38' // Default genome build, can be parameterized
 
 log.info """\
          GWASi-flow - GWAS INGESTION PIPELINE
          ===================================
          GWAS CSV     : ${params.gwas_csv}
-         Genome build : ${params.genome_build}
          Output dir   : ${params.outdir}
          """
          .stripIndent()
@@ -124,12 +122,12 @@ process stageGWAS {
 // Process 2: Munge GWAS file using MungeSumstats
 process mungeGWAS {
     label "process_high"
+    tag "$gwas_file"
     publishDir "${params.outdir}/processed", mode: 'copy'
     
     
     input:
-    tuple val(meta), path(gwas_file)
-    val genome_build // Default genome build, can be parameterized if needed
+    tuple val(meta), path(gwas_file), val(genome_build)
     
     output:
     tuple val(meta), path("${meta.gwas}_processed*.txt"), emit: gwas_processed
@@ -144,86 +142,41 @@ process mungeGWAS {
     # Set variables
     genome_build <- "${genome_build}"
     inputFile <- "${gwas_file}"
-    tempFile <- "temp_${meta.gwas}_normalized.txt"
     outputFile <- paste0("${meta.gwas}_processed", genome_build, ".txt")
     
     # Check if the file has headers to convert
     cat("Checking file headers for standardization...\n")
     
     # Read first few lines to check headers (efficient for large files)
-    fileHeader <- fread(inputFile, nrows = 1)
+    fileHeader <- fread(inputFile, nrows = 1, fill = TRUE, verbose = TRUE)
     columnNames <- names(fileHeader)
     
     # Print original column names
-    cat("Original column names:", paste(columnNames, collapse = ", "), "\n")
-    
-    # Check for problematic column names
-    needsConversion <- any(columnNames %in% c("chromosome", "base_pair_position", "base_pair_location"))
-    
-    if (needsConversion) {
-        cat("Found non-standard column names. Converting to MungeSumstats format...\n")
-        
-        # Read the data, potentially large so use fread
-        sumstatsData <- fread(inputFile)
-        
-        # Rename columns
-        if ("chromosome" %in% columnNames) {
-            cat("Converting 'chromosome' to 'CHR'\\n")
-            setnames(sumstatsData, "chromosome", "CHR")
-        }
-        
-        if ("base_pair_position" %in% columnNames) {
-            cat("Converting 'base_pair_position' to 'BP'\\n")
-            setnames(sumstatsData, "base_pair_position", "BP")
-        }
-        
-        if ("base_pair_location" %in% columnNames) {
-            cat("Converting 'base_pair_location' to 'POS'\\n")
-            setnames(sumstatsData, "base_pair_location", "BP")
-        }
+    cat("Original column names:", paste(columnNames, collapse = ", "), "\\n")
 
-        if ("SNP_ID" %in% columnNames) {
-            cat("Converting 'SNP_ID' to 'SNP'\\n")
-            setnames(sumstatsData, "SNP_ID", "SNP")
-        }
-        
-        if ("other_allele" %in% columnNames) {
-            cat("Converting 'other_allele' to 'REF'\\n")
-            setnames(sumstatsData, "other_allele", "REF")
-        }
-
-        if ("effect_allele" %in% columnNames) {
-            cat("Converting 'effect_allele' to 'ALT'\\n")
-            setnames(sumstatsData, "effect_allele", "ALT")
-        }
-
-
-        
-        # Write the modified data
-        fwrite(sumstatsData, tempFile, sep = "\\t")
-        cat("Finished converting column names. Using preprocessed file for MungeSumstats.\n")
-        
-        # Use the temp file for MungeSumstats
-        inputFile <- tempFile
-    }
-    
-    # Process with MungeSumstats
-    cat("Processing with MungeSumstats...\n")
+    # Process with MungeSumstats directly
+    cat("Processing with MungeSumstats...\\n")
+    cat("Build is: ", genome_build, "\\n" )
     MungeSumstats::format_sumstats(
         inputFile,
         save_path = outputFile,
         impute_beta = TRUE,
         impute_se = TRUE,
-        indels = FALSE,
-        bi_allelic_filter=FALSE,
-        flip_frq_as_biallelic=TRUE,
-        ref_genome = genome_build,
-        convert_ref_genome=genome_build
+        ref_genome = genome_build
     )
+
+    if(genome_build != "GRCh38") {
+       message("Warning: Genome build is not GRCh38, please ensure compatibility with your analysis.\\n")
+        MungeSumstats::format_sumstats(
+            outputFile,
+            save_path = outputFile,
+            impute_beta = TRUE,
+            impute_se = TRUE,
     
-    # Clean up temp file if it was created
-    if (needsConversion && file.exists(tempFile)) {
-        file.remove(tempFile)
+            ref_genome = genome_build,
+            convert_n_int = FALSE,
+            convert_ref_genome = "GRCh38"
+        )
     }
     """
 }
@@ -238,16 +191,22 @@ workflow {
             def gwas = row.GWAS?.trim()
             def year = row.year?.trim()
             def source = row.path?.trim() ?: row.URL?.trim() // Support both 'path' and 'URL' for backward compatibility
+            def genome_build = row.genome_build?.trim()
+            
+            // Validate genome_build
+            if (!genome_build || !(genome_build in ['GRCh38', 'GRCh37'])) {
+                error "Invalid or missing genome_build '${genome_build}' for GWAS '${gwas}'. Must be either 'GRCh38' or 'GRCh37'"
+            }
             
             // Log what we're processing
-            log.info "Processing row: GWAS=${gwas}, year=${year}, path=${source}"
+            log.info "Processing row: GWAS=${gwas}, year=${year}, genome_build=${genome_build}, path=${source}"
             
-            // Return a tuple with GWAS name, year, source, and whether it's a local file
-            [gwas, year, source, (source ==~ /^\\/.*/ || source ==~ /^\\.\\/.*/ || source ==~ /^\\.\\.\\/.*/)]
+            // Return a tuple with GWAS name, year, source, genome_build, and whether it's a local file
+            [gwas, year, source, genome_build, (source ==~ /^\\/.*/ || source ==~ /^\\.\\/.*/ || source ==~ /^\\.\\.\\/.*/)]
         }
         .branch {
-            local: it[3] == true    // Local file path
-            remote: it[3] == false  // URL to download
+            local: it[4] == true    // Local file path
+            remote: it[4] == false  // URL to download
         }
         .set { input_ch }
     
@@ -264,6 +223,20 @@ workflow {
     // Merge the outputs from both processes for mungeGWAS
     gwas_files_ch = downloadGWAS.out.gwas_raw.mix(stageGWAS.out.gwas_raw)
     
+    // Create a channel with genome_build information keyed by GWAS name
+    genome_build_ch = input_ch.remote.mix(input_ch.local)
+        .map { gwas, year, source, genome_build, is_local ->
+            [gwas, genome_build]
+        }
+    
+    // Join the channels to combine gwas files with their genome builds
+    // gwas_files_ch emits: [meta, gwas_file] where meta = [gwas: gwas, year: year]
+    // genome_build_ch emits: [gwas, genome_build]
+    mungeGWAS_input = gwas_files_ch
+        .map { meta, gwas_file -> [meta.gwas, meta, gwas_file] }  // Restructure to key by gwas name
+        .join(genome_build_ch, by: 0)  // Join on gwas name
+        .map { gwas, meta, gwas_file, genome_build -> [meta, gwas_file, genome_build] }  // Restructure for mungeGWAS
+    
     // Process all files with mungeGWAS
-    mungeGWAS(gwas_files_ch, params.genome_build)
+    mungeGWAS(mungeGWAS_input)
 }
