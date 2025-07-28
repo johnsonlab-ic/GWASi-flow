@@ -160,20 +160,92 @@ process mungeGWAS {
     MungeSumstats::format_sumstats(
         inputFile,
         save_path = outputFile,
-        ref_genome = genome_build
+        ref_genome = genome_build,
+        force_new = TRUE
     )
 
     if(genome_build != "GRCh38") {
+
+        new_outputFile <- paste0("${meta.gwas}_processed", "GRCh38", ".txt")
        message("Warning: Genome build is not GRCh38, please ensure compatibility with your analysis.\\n")
         MungeSumstats::format_sumstats(
             outputFile,
-            save_path = outputFile,
-            impute_beta = TRUE,
-            impute_se = TRUE,
-            ref_genome = genome_build,
-            convert_n_int = FALSE,
+            save_path = new_outputFile,
+            force_new = TRUE,
             convert_ref_genome = "GRCh38"
         )
+
+        #now remove the old file
+        file.remove(outputFile)
+        message("Removed old file: ", outputFile)
+        
+        # Update outputFile to point to the new GRCh38 file
+        outputFile <- new_outputFile
+    }
+    
+    # Custom Beta and SE imputation if both are missing
+    cat("Checking for Beta and SE columns and imputing if missing...\\n")
+    
+    # Read the processed file
+    processed_data <- fread(outputFile)
+    
+    # Check if Beta and SE are missing
+    has_beta <- "BETA" %in% names(processed_data)
+    has_se <- "SE" %in% names(processed_data)
+    
+    if (!has_beta && !has_se) {
+        cat("Both BETA and SE are missing. Calculating from Z-score and other available data...\\n")
+        
+        # Check required columns
+        required_cols <- c("Z", "N", "FRQ")
+        missing_cols <- required_cols[!required_cols %in% names(processed_data)]
+        
+        if (length(missing_cols) == 0) {
+            # Calculate MAF (Minor Allele Frequency)
+            processed_data[, MAF := pmin(FRQ, 1 - FRQ)]
+            
+            # Calculate SE first: SE = 1 / sqrt(N * 2 * MAF * (1-MAF))
+            processed_data[, SE := 1 / sqrt(N * 2 * MAF * (1 - MAF))]
+            
+            # Calculate Beta: Beta = Z * SE
+            processed_data[, BETA := Z * SE]
+            
+            # Remove temporary MAF column
+            processed_data[, MAF := NULL]
+            
+            cat("Successfully calculated BETA and SE from Z-score, N, and frequency\\n")
+            
+            # Write back to file
+            fwrite(processed_data, outputFile, sep = "\\t")
+            cat("Updated file with BETA and SE columns\\n")
+            
+        } else {
+            cat("Cannot calculate BETA and SE. Missing required columns:", paste(missing_cols, collapse = ", "), "\\n")
+            cat("Available columns:", paste(names(processed_data), collapse = ", "), "\\n")
+        }
+        
+    } else if (!has_beta && has_se) {
+        cat("BETA missing but SE available. Calculating BETA = Z * SE\\n")
+        if ("Z" %in% names(processed_data)) {
+            processed_data[, BETA := Z * SE]
+            fwrite(processed_data, outputFile, sep = "\\t")
+            cat("Successfully calculated BETA from Z and SE\\n")
+        } else {
+            cat("Cannot calculate BETA: Z column missing\\n")
+        }
+        
+    } else if (has_beta && !has_se) {
+        cat("SE missing but BETA available. Calculating SE = |BETA| / |Z|\\n")
+        if ("Z" %in% names(processed_data)) {
+            processed_data[, SE := abs(BETA) / abs(Z)]
+            fwrite(processed_data, outputFile, sep = "\\t")
+            cat("Successfully calculated SE from BETA and Z\\n")
+        } else {
+            cat("Cannot calculate SE: Z column missing\\n")
+        }
+        
+    } else {
+        cat("Both BETA and SE are already present. No imputation needed.\\n")
     }
     """
 }
